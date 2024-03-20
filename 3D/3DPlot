@@ -1,0 +1,49 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+import os
+
+# Load your data
+dir_path = os.path.dirname(os.path.realpath(__file__))
+df = pd.read_csv(f"{dir_path}/Result_ve2.csv")
+
+# Replace '---' with NaN
+df.replace('---', np.nan, inplace=True)
+
+# Convert columns to numeric, if they're not already
+df['B_Torque'] = pd.to_numeric(df['B_Torque'], errors='coerce')
+df['MaxSpeed_T'] = pd.to_numeric(df['MaxSpeed_T'], errors='coerce')
+# Assuming another column for BEMF_peak, please replace 'BEMF_peak' with the correct column name if different
+df['BEMF_peak'] = pd.to_numeric(df['BEMF_peak'], errors='coerce') 
+
+# Drop rows with NaN
+df.dropna(subset=['B_Torque', 'MaxSpeed_T', 'BEMF_peak'], inplace=True)
+
+# Now, plotting
+fig = plt.figure(figsize=(10, 7))
+ax = fig.add_subplot(111, projection='3d')
+
+# Assuming 'B_B_Torque' corresponds to 'B_Torque' and 'MaxSpeed_T' corresponds to 'Speed'
+ax.scatter(df['B_Torque'], df['MaxSpeed_T'], df['BEMF_peak'], c='blue', marker='o')
+
+ax.set_xlabel('B_Torque')
+ax.set_ylabel('MaxSpeed_T')
+ax.set_zlabel('BEMF_peak')
+
+plt.title('3D Plot of B_Torque, MaxSpeed_T, and BEMF_peak')
+plt.show()
+
+print(df['BEMF_peak'])
+# Function to find cases meeting specific criteria
+def find_matching_cases(df):
+    filtered_df = df[
+        (df['B_Torque'] > 3267) & 
+        (df['MaxSpeed_T'] > 923) & 
+        (df['BEMF_peak'] <= 3181.980515)
+    ]
+    return filtered_df['Case'].tolist()
+
+# Call the function and print the result
+matching_cases = find_matching_cases(df)
+print("Matching cases:", matching_cases)
