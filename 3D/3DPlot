@@ -16,6 +16,7 @@ df['B_Torque'] = pd.to_numeric(df['B_Torque'], errors='coerce')
 df['MaxSpeed_T'] = pd.to_numeric(df['MaxSpeed_T'], errors='coerce')
 # Assuming another column for BEMF_peak, please replace 'BEMF_peak' with the correct column name if different
 df['BEMF_peak'] = pd.to_numeric(df['BEMF_peak'], errors='coerce') 
+df['T_Ripple'] = pd.to_numeric(df['T_Ripple'], errors='coerce')  # Assuming 'T_Ripple' is the correct column name
 
 # Drop rows with NaN
 df.dropna(subset=['B_Torque', 'MaxSpeed_T', 'BEMF_peak'], inplace=True)
@@ -36,14 +37,23 @@ plt.show()
 
 print(df['BEMF_peak'])
 # Function to find cases meeting specific criteria
-def find_matching_cases(df):
+def find_best_cases_with_details(df):
+    # Filter based on given criteria
     filtered_df = df[
         (df['B_Torque'] > 3267) & 
         (df['MaxSpeed_T'] > 923) & 
-        (df['BEMF_peak'] <= 3181.980515)
+        (df['BEMF_peak'] <= 3500)
     ]
-    return filtered_df['Case'].tolist()
+    
+    # Apply weights
+    filtered_df['Score'] = (filtered_df['B_Torque'] * 1.0) - (filtered_df['T_Ripple'] * 2.0)
+    
+    # Select top 3 cases based on the score
+    best_cases_df = filtered_df.nlargest(3, 'Score')
+    
+    # Return the dataframe with selected columns for best cases
+    return best_cases_df[['Case', 'B_Torque', 'MaxSpeed_T', 'BEMF_peak', 'T_Ripple']]
 
-# Call the function and print the result
-matching_cases = find_matching_cases(df)
-print("Matching cases:", matching_cases)
+# Assuming the dataframe is already loaded and processed as per the previous steps
+best_cases_df = find_best_cases_with_details(df)
+print(best_cases_df)
